@@ -12,7 +12,18 @@ class CacheManager {
     companion object {
         private const val TAG = "CacheManager"
         
+        private fun isAtakRunning(context: Context): Boolean {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val runningProcesses = activityManager.runningAppProcesses
+            return runningProcesses?.any { it.processName.contains("atakmap", ignoreCase = true) } == true
+        }
+        
         fun offloadATAKCache(context: Context) {
+            if (isAtakRunning(context)) {
+                Toast.makeText(context, "Please close ATAK before clearing the cache.", Toast.LENGTH_LONG).show()
+                Log.w(TAG, "ATAK is running. Prompted user to close it before cache operation.")
+                return
+            }
             try {
                 val sdcard = Environment.getExternalStorageDirectory()
                 val atakDir = File(sdcard, "atak")
@@ -30,23 +41,28 @@ class CacheManager {
                     
                     if (statesaverFile.renameTo(backupFile)) {
                         Log.d(TAG, "ATAK cache offloaded successfully")
-                        Toast.makeText(context, "ATAK cache offloaded successfully", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "ATAK cache offloaded successfully", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.e(TAG, "Failed to offload ATAK cache")
-                        Toast.makeText(context, "Failed to offload ATAK cache", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "Failed to offload ATAK cache", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     Log.w(TAG, "ATAK cache file not found")
-                    Toast.makeText(context, "ATAK cache file not found", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "ATAK cache file not found", Toast.LENGTH_SHORT).show()
                 }
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error offloading ATAK cache: ${e.message}", e)
-                Toast.makeText(context, "Error offloading ATAK cache: ${e.message}", Toast.LENGTH_LONG).show()
+                // Toast.makeText(context, "Error offloading ATAK cache: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
 
         fun restoreATAKCache(context: Context) {
+            if (isAtakRunning(context)) {
+                Toast.makeText(context, "Please close ATAK before restoring the cache.", Toast.LENGTH_LONG).show()
+                Log.w(TAG, "ATAK is running. Prompted user to close it before cache operation.")
+                return
+            }
             try {
                 val sdcard = Environment.getExternalStorageDirectory()
                 val atakDir = File(sdcard, "atak")
@@ -54,7 +70,7 @@ class CacheManager {
                 
                 if (!backupDir.exists()) {
                     Log.w(TAG, "No backup directory found")
-                    Toast.makeText(context, "No backup directory found", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "No backup directory found", Toast.LENGTH_SHORT).show()
                     return
                 }
                 
@@ -65,7 +81,7 @@ class CacheManager {
                 
                 if (backupFiles.isNullOrEmpty()) {
                     Log.w(TAG, "No backup files found")
-                    Toast.makeText(context, "No backup files found", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "No backup files found", Toast.LENGTH_SHORT).show()
                     return
                 }
                 
@@ -88,23 +104,28 @@ class CacheManager {
                     
                     if (mostRecentBackup.renameTo(targetFile)) {
                         Log.d(TAG, "ATAK cache restored successfully")
-                        Toast.makeText(context, "ATAK cache restored successfully", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "ATAK cache restored successfully", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.e(TAG, "Failed to restore ATAK cache")
-                        Toast.makeText(context, "Failed to restore ATAK cache", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "Failed to restore ATAK cache", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     Log.w(TAG, "No valid backup files found")
-                    Toast.makeText(context, "No valid backup files found", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "No valid backup files found", Toast.LENGTH_SHORT).show()
                 }
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error restoring ATAK cache: ${e.message}", e)
-                Toast.makeText(context, "Error restoring ATAK cache: ${e.message}", Toast.LENGTH_LONG).show()
+                // Toast.makeText(context, "Error restoring ATAK cache: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
 
         fun deleteATAKCache(context: Context) {
+            if (isAtakRunning(context)) {
+                Toast.makeText(context, "Please close ATAK before deleting the cache.", Toast.LENGTH_LONG).show()
+                Log.w(TAG, "ATAK is running. Prompted user to close it before cache operation.")
+                return
+            }
             try {
                 val sdcard = Environment.getExternalStorageDirectory()
                 val atakDir = File(sdcard, "atak")
@@ -114,19 +135,19 @@ class CacheManager {
                 if (statesaverFile.exists()) {
                     if (statesaverFile.delete()) {
                         Log.d(TAG, "ATAK cache deleted successfully")
-                        Toast.makeText(context, "ATAK cache deleted successfully", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "ATAK cache deleted successfully", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.e(TAG, "Failed to delete ATAK cache")
-                        Toast.makeText(context, "Failed to delete ATAK cache", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "Failed to delete ATAK cache", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     Log.w(TAG, "ATAK cache file not found")
-                    Toast.makeText(context, "ATAK cache file not found", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "ATAK cache file not found", Toast.LENGTH_SHORT).show()
                 }
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error deleting ATAK cache: ${e.message}", e)
-                Toast.makeText(context, "Error deleting ATAK cache: ${e.message}", Toast.LENGTH_LONG).show()
+                // Toast.makeText(context, "Error deleting ATAK cache: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -150,23 +171,23 @@ class CacheManager {
                         
                         if (atosHistoryFile.renameTo(archiveFile)) {
                             Log.d(TAG, "ATOS cache cleared successfully")
-                            Toast.makeText(context, "ATOS cache cleared successfully", Toast.LENGTH_SHORT).show()
+                            // Toast.makeText(context, "ATOS cache cleared successfully", Toast.LENGTH_SHORT).show()
                         } else {
                             Log.e(TAG, "Failed to clear ATOS cache")
-                            Toast.makeText(context, "Failed to clear ATOS cache", Toast.LENGTH_SHORT).show()
+                            // Toast.makeText(context, "Failed to clear ATOS cache", Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         Log.w(TAG, "ATOS cache file not found")
-                        Toast.makeText(context, "ATOS cache file not found", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "ATOS cache file not found", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     Log.w(TAG, "ATOS directory not found - cannot clear ATOS cache")
-                    Toast.makeText(context, "ATOS directory not found - cannot clear ATOS cache", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "ATOS directory not found - cannot clear ATOS cache", Toast.LENGTH_SHORT).show()
                 }
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error clearing ATOS cache: ${e.message}", e)
-                Toast.makeText(context, "Error clearing ATOS cache: ${e.message}", Toast.LENGTH_LONG).show()
+                // Toast.makeText(context, "Error clearing ATOS cache: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

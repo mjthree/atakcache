@@ -27,7 +27,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.apexclearcache.app.ui.theme.ApexClearCacheTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 class MainActivity : ComponentActivity() {
     companion object {
@@ -53,7 +60,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ApexClearCacheTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ATAKCacheScreen(
+                    MainScreen(
                         modifier = Modifier.padding(innerPadding),
                         onOffloadATAKCache = {
                             if (checkAndRequestPermissions()) {
@@ -145,8 +152,28 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ATAKCacheScreen(
+fun MainScreen(
     modifier: Modifier = Modifier,
+    onOffloadATAKCache: () -> Unit,
+    onDeleteATAKCache: () -> Unit,
+    onRestoreATAKCache: () -> Unit,
+    onClearATOSCache: () -> Unit,
+    onRequestPermissions: () -> Unit
+) {
+    // Only show the Manual tab
+    Column(modifier = modifier.fillMaxSize()) {
+        ManualCacheScreen(
+            onOffloadATAKCache = onOffloadATAKCache,
+            onDeleteATAKCache = onDeleteATAKCache,
+            onRestoreATAKCache = onRestoreATAKCache,
+            onClearATOSCache = onClearATOSCache,
+            onRequestPermissions = onRequestPermissions
+        )
+    }
+}
+
+@Composable
+fun ManualCacheScreen(
     onOffloadATAKCache: () -> Unit,
     onDeleteATAKCache: () -> Unit,
     onRestoreATAKCache: () -> Unit,
@@ -157,9 +184,16 @@ fun ATAKCacheScreen(
     var showOffloadDialog by remember { mutableStateOf(false) }
     var showRestoreDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showAtakWarningDialog by remember { mutableStateOf<String?>(null) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    fun showAtakWarningAndThen(action: () -> Unit) {
+        showAtakWarningDialog = "ATAK must be closed before performing this operation. Please ensure ATAK is not running, then continue."
+        pendingAction = action
+    }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
@@ -193,302 +227,140 @@ fun ATAKCacheScreen(
                 )
                 
                 Text(
-                    text = "ATAK Cache:\n• /sdcard/atak/Databases/statesaver2.sqlite\n\nATOS Cache:\n• /sdcard/atak/tools/atos/atos_history.sqlite",
-                    fontSize = 12.sp,
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                    text = "• Offload: Creates backup before clearing\n• Delete: Permanently removes cache\n• Restore: Brings back most recent backup\n• Clear ATOS: Archives ATOS cache",
+                    fontSize = 12.sp
                 )
             }
         }
         
-        // ATAK Cache Operations
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        // Manual operation buttons
+        Button(
+            onClick = { showAtakWarningAndThen { showOffloadDialog = true } },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "ATAK Cache Operations",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Button(
-                    onClick = { showOffloadDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text(
-                        text = "Offload ATAK Cache",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                
-                Text(
-                    text = "Moves ATAK cache to backup location with timestamp (removes current data)",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Button(
-                    onClick = { showRestoreDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    )
-                ) {
-                    Text(
-                        text = "Restore ATAK Cache",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                
-                Text(
-                    text = "Restores most recent backup (overwrites current data)",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Button(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(
-                        text = "Delete ATAK Cache",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                
-                Text(
-                    text = "Permanently deletes ATAK cache file (use with caution)",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text("Offload ATAK Cache")
         }
         
-        // ATOS Cache Operations
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        Button(
+            onClick = { showAtakWarningAndThen { showDeleteDialog = true } },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "ATOS Cache Operations",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Button(
-                    onClick = onClearATOSCache,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Text(
-                        text = "Clear ATOS Cache",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                
-                Text(
-                    text = "Moves ATOS cache to archive location with timestamp (safe operation)",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text("Delete ATAK Cache")
         }
         
-        // Permissions
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        Button(
+            onClick = { showAtakWarningAndThen { showRestoreDialog = true } },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Permissions",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Button(
-                    onClick = onRequestPermissions,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Text(
-                        text = "Grant Permissions",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                
-                Text(
-                    text = "Request storage permissions if operations fail",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text("Restore ATAK Cache")
         }
         
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        Button(
+            onClick = onClearATOSCache,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Important Notes",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Text(
-                    text = "• Ensure ATAK is closed before performing cache operations\n• Offload removes current planning, icons, and COT data\n• Restore overwrites current data with backup\n• ATAK cache can be offloaded, restored, or deleted\n• ATOS cache can only be cleared (moved to archive)\n• ATOS operations are skipped if directory doesn't exist\n• Grant 'All files access' permission if operations fail",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text("Clear ATOS Cache")
+        }
+        
+        // Permission request button
+        Button(
+            onClick = onRequestPermissions,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Request Permissions")
         }
     }
-    // Offload warning dialog
+    
+    // ATAK must be closed warning dialog
+    if (showAtakWarningDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showAtakWarningDialog = null; pendingAction = null },
+            title = { Text("Warning") },
+            text = { Text(showAtakWarningDialog!!) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showAtakWarningDialog = null
+                        pendingAction?.invoke()
+                        pendingAction = null
+                    }
+                ) { Text("Continue") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAtakWarningDialog = null
+                        pendingAction = null
+                    }
+                ) { Text("Cancel") }
+            }
+        )
+    }
+    
+    // Dialogs
     if (showOffloadDialog) {
         AlertDialog(
             onDismissRequest = { showOffloadDialog = false },
-            title = {
-                Text(
-                    text = "⚠️ Warning: Data Loss",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error
-                )
-            },
-            text = {
-                Text(
-                    text = "Offloading ATAK cache will remove all planning, icons, and COT (Cursor on Target) data from the map. This action will clear your current mission data.\n\nAre you sure you want to continue?",
-                    fontSize = 14.sp
-                )
-            },
+            title = { Text("Offload ATAK Cache") },
+            text = { Text("This will move the current cache to a backup location with a timestamp. Continue?") },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
-                        showOffloadDialog = false
                         onOffloadATAKCache()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
+                        showOffloadDialog = false
+                    }
                 ) {
-                    Text("Yes, Offload Cache")
+                    Text("Offload")
                 }
             },
             dismissButton = {
-                Button(
-                    onClick = { showOffloadDialog = false }
-                ) {
+                TextButton(onClick = { showOffloadDialog = false }) {
                     Text("Cancel")
                 }
             }
         )
     }
-    // Restore warning dialog
-    if (showRestoreDialog) {
-        AlertDialog(
-            onDismissRequest = { showRestoreDialog = false },
-            title = {
-                Text(
-                    text = "⚠️ Warning: Data Overwrite",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error
-                )
-            },
-            text = {
-                Text(
-                    text = "Restoring ATAK cache will overwrite all current planning, icons, and COT data on the map with the backup data. This action will replace your current mission data.\n\nAre you sure you want to continue?",
-                    fontSize = 14.sp
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showRestoreDialog = false
-                        onRestoreATAKCache()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Yes, Restore Cache")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showRestoreDialog = false }
-                ) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-    // Delete warning dialog
+    
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = {
-                Text(
-                    text = "⚠️ Warning: Permanent Deletion",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error
-                )
-            },
-            text = {
-                Text(
-                    text = "Deleting the ATAK cache cannot be undone! This will permanently remove all planning, icons, and COT data from the map.\n\nAre you sure you want to continue?",
-                    fontSize = 14.sp
-                )
-            },
+            title = { Text("Delete ATAK Cache") },
+            text = { Text("This will permanently delete the current cache file. This action cannot be undone. Continue?") },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
-                        showDeleteDialog = false
                         onDeleteATAKCache()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
+                        showDeleteDialog = false
+                    }
                 ) {
-                    Text("Yes, Delete Cache")
+                    Text("Delete")
                 }
             },
             dismissButton = {
-                Button(
-                    onClick = { showDeleteDialog = false }
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    if (showRestoreDialog) {
+        AlertDialog(
+            onDismissRequest = { showRestoreDialog = false },
+            title = { Text("Restore ATAK Cache") },
+            text = { Text("This will restore the most recent backup to the active location. Continue?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRestoreATAKCache()
+                        showRestoreDialog = false
+                    }
                 ) {
+                    Text("Restore")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreDialog = false }) {
                     Text("Cancel")
                 }
             }
