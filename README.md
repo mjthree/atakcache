@@ -105,3 +105,4 @@ This app is designed for managing ATAK cache files. Always backup important data
 ## Support
 
 For issues and feature requests, please use the GitHub Issues page. 
+

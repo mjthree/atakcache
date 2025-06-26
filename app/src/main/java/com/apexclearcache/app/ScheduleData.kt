@@ -32,3 +32,4 @@ data class ScheduleStatus(
     val runsCompleted: Int,
     val maxRuns: Int?
 ) 
+
