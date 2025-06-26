@@ -27,8 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.work.Configuration
-import androidx.work.WorkManager
 import com.apexclearcache.app.ui.theme.ApexClearCacheTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
