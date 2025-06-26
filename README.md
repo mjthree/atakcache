@@ -1,13 +1,23 @@
 # ATAK Cache Manager
 
-A simple Android application for managing ATAK (Android Team Awareness Kit) cache files locally on your device.
+A simple Android application for manually managing ATAK (Android Team Awareness Kit) cache files locally on your device.
 
 ## Features
 
-- **Offload ATAK Cache**: Moves `statesaver2.sqlite` to a timestamped backup location
-- **Delete ATAK Cache**: Permanently removes the current `statesaver2.sqlite` file
-- **Restore ATAK Cache**: Restores the most recent backup to the active location
+- **Offload ATAK Cache**: Moves `statesaver2.sqlite` to a timestamped backup location (manual only)
+- **Delete ATAK Cache**: Permanently removes the current `statesaver2.sqlite` file (manual only)
+- **Restore ATAK Cache**: Restores the most recent backup to the active location (manual only)
 - **Clear ATOS Cache**: Moves `atos_history.sqlite` to a timestamped archive location
+
+> **Note:** The app no longer supports scheduled/automated cache operations. All actions are performed manually by the user.
+
+## ATAK Must Be Closed
+
+Before any ATAK cache operation (offload, delete, restore), the app will always show a warning dialog:
+
+> "ATAK must be closed before performing this operation. Please ensure ATAK is not running, then continue."
+
+You must confirm this warning before proceeding. This is to prevent data corruption or instability in ATAK.
 
 ## File Locations
 
@@ -41,8 +51,9 @@ A simple Android application for managing ATAK (Android Team Awareness Kit) cach
    - **Delete**: Permanently removes cache (use with caution)
    - **Restore**: Brings back the most recent backup
    - **Clear ATOS**: Archives ATOS cache with timestamp
-4. Confirm the action in the dialog
-5. Check the Toast notification for operation status
+4. For ATAK cache operations, you will first see a warning to close ATAK. Confirm to proceed.
+5. Confirm the action in the dialog
+6. For ATOS or ATAK-running warnings, a Toast notification will show the operation status or warning.
 
 ## Permissions
 
@@ -89,7 +100,7 @@ This project is open source. Please check the LICENSE file for details.
 
 ## Disclaimer
 
-This app is designed for managing ATAK cache files. Always backup important data before performing cache operations. The developers are not responsible for any data loss.
+This app is designed for managing ATAK cache files. Always backup important data before performing cache operations. The developers are not responsible for any data loss. **Never perform ATAK cache operations while ATAK is running.**
 
 ## Support
 
