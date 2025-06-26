@@ -89,7 +89,7 @@ app/src/main/java/com/apexclearcache/app/
 
 ## License
 
-This project is open source. Please check the LICENSE file for details.
+This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
